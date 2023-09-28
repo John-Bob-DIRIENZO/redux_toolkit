@@ -1,6 +1,7 @@
-import {AnyAction, createSlice, PayloadAction, ThunkAction} from "@reduxjs/toolkit";
+import {createSlice, PayloadAction} from "@reduxjs/toolkit";
 import {Todo} from "../type/todo";
 import {AppDispatch, RootState} from "./store";
+import {fakeApiCall} from "../fake/api";
 
 const initialState: Todo[] = [
     {
@@ -15,10 +16,21 @@ const initialState: Todo[] = [
     }
 ]
 
+// Je crée une fonction synchrone qui me va me retourner une action asynchrone
+export const asyncAddTodo = (todo: Todo, timeMilliSeconds: number): any => {
+    return async (dispatch: AppDispatch, getState: () => RootState) => {
+        // Je vais faire mon call API
+        let res = await fakeApiCall(todo, timeMilliSeconds)
+        // et attendre le résultat avant de le dispatcher
+        dispatch(addTodo(res))
+        console.log(getState().todo)
+    }
+}
+
 export const todoSlice = createSlice({
-    name: 'todo',
-    initialState: initialState,
-    reducers: {
+    name: 'todo',               // Utilisé en interne pour nommer mes actions
+    initialState: initialState, // Mon état initial
+    reducers: {                 // Tous mes reducers
         addTodo: (state, action: PayloadAction<Todo>) => {
             return [
                 ...state,
@@ -43,17 +55,12 @@ export const todoSlice = createSlice({
     }
 })
 
-export const asyncAddTodo = (todo: Todo, timeMilliSeconds: number): any => {
-    return async (dispatch: AppDispatch, getState: () => RootState) => {
-        dispatch(toggleTodo(1))
-        console.log(getState().todo)
-        setTimeout(() => {
-            dispatch(addTodo(todo))
-            console.log(getState().todo)
-        }, timeMilliSeconds)
-    }
-}
+export const {
+    addTodo,
+    deleteTodo,
+    toggleTodo
+} = todoSlice.actions
 
-export const {addTodo, deleteTodo, toggleTodo} = todoSlice.actions
-export const selectTodo = (state: RootState) => state.todo
 export default todoSlice.reducer
+
+export const selectTodo = (state: RootState) => state.todo
